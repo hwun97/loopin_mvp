@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -11,15 +12,15 @@ class QRScanScreen extends StatefulWidget {
 class _QRScanScreenState extends State<QRScanScreen> {
   final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
   QRViewController? controller;
-  String? scannedCode;
+  bool isScanned = false;
 
   @override
   void reassemble() {
     super.reassemble();
-    if (mounted) {
+    if (Platform.isAndroid) {
       controller?.pauseCamera();
-      controller?.resumeCamera();
     }
+    controller?.resumeCamera();
   }
 
   @override
@@ -28,14 +29,13 @@ class _QRScanScreenState extends State<QRScanScreen> {
     super.dispose();
   }
 
-  void _onQRViewCreated(QRViewController ctrl) {
-    controller = ctrl;
-    controller?.scannedDataStream.listen((scanData) {
-      controller?.pauseCamera();
-      setState(() {
-        scannedCode = scanData.code;
-      });
-      Navigator.pop(context, scanData.code); // 결과 리턴
+  void _onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((scanData) {
+      if (!isScanned) {
+        isScanned = true;
+        Navigator.pop(context, scanData.code);
+      }
     });
   }
 
@@ -43,18 +43,16 @@ class _QRScanScreenState extends State<QRScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('QR 코드 스캔')),
-      body: Column(
-        children: [
-          Expanded(
-            flex: 5,
-            child: QRView(key: qrKey, onQRViewCreated: _onQRViewCreated),
-          ),
-          if (scannedCode != null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('스캔 결과: $scannedCode'),
-            ),
-        ],
+      body: QRView(
+        key: qrKey,
+        onQRViewCreated: _onQRViewCreated,
+        overlay: QrScannerOverlayShape(
+          borderColor: Colors.blue,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: 250,
+        ),
       ),
     );
   }
