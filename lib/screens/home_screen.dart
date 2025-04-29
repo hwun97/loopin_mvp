@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../services/firestore_service.dart';
 import '../services/google_sign_in_service.dart';
-import '../services/firestore_service.dart'; // FirestoreService import 추가
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -36,38 +36,41 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () async {
-                await FirestoreService.rentUmbrellaForUser();
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('우산 대여 완료')));
+                if (user == null) return;
+                try {
+                  // 우산 대여
+                  await FirestoreService.rentUmbrella('umbrella_01', user.uid);
+                  await FirestoreService.rentUmbrellaForUser();
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('우산 대여 완료!')));
+                } catch (e) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('대여 중 오류 발생: $e')));
+                }
               },
               child: const Text('우산 대여하기'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                final user = FirebaseAuth.instance.currentUser;
-                if (user != null) {
-                  await FirestoreService.returnUmbrella(
-                    user.uid,
-                  ); // user.uid를 umbrellaId로 사용
+                if (user == null) return;
+                try {
+                  // 우산 반납
+                  await FirestoreService.returnUmbrella('umbrella_01');
+                  await FirestoreService.returnUmbrellaForUser();
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(const SnackBar(content: Text("우산 반납 완료")));
+                  ).showSnackBar(const SnackBar(content: Text('우산 반납 완료!')));
+                } catch (e) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('반납 중 오류 발생: $e')));
                 }
               },
               child: const Text('우산 반납하기'),
             ),
-
-            // ElevatedButton(
-            //   onPressed: () async {
-            //     await FirestoreService.returnUmbrellaForUser();
-            //     ScaffoldMessenger.of(
-            //       context,
-            //     ).showSnackBar(const SnackBar(content: Text('우산 반납 완료')));
-            //   },
-            //   child: const Text('우산 반납하기'),
-            // ),
           ],
         ),
       ),
