@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:loopin_mvp/screens/qr_scan_screen.dart';
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
@@ -20,11 +19,15 @@ class LoopInApp extends StatelessWidget {
     return MaterialApp(
       title: 'LoopIn',
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: Colors.white,
+      ),
       initialRoute: '/',
       routes: {
         '/': (context) => const LoginScreen(),
-        '/scan': (context) => const QRScanScreen(),
         '/home': (context) => const HomeScreen(),
+        '/scan': (context) => const QRScanScreen(),
       },
     );
   }

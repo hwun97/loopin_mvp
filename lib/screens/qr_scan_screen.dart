@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart'; // 추가!!
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 
@@ -43,7 +43,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
   bool get _isSimulator {
     if (kIsWeb) return false;
     if (Platform.isIOS || Platform.isAndroid) {
-      return kDebugMode; // 디버그 모드면 시뮬레이터로 가정
+      return kDebugMode;
     }
     return false;
   }
@@ -59,6 +59,9 @@ class _QRScanScreenState extends State<QRScanScreen> {
                   onPressed: () {
                     Navigator.pop(context, "umbrella_01"); // 테스트용 ID
                   },
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(200, 50),
+                  ),
                   child: const Text('테스트용 QR 스캔 (umbrella_01)'),
                 ),
               )
