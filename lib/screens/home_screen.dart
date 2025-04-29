@@ -31,6 +31,53 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _handleRentalAction(String action) async {
+    final umbrellaId = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const QRScanScreen()),
+    );
+
+    if (umbrellaId == null) return;
+
+    try {
+      if (action == 'rent') {
+        await FirestoreService.rentUmbrella(umbrellaId, user!.uid);
+        await FirestoreService.rentUmbrellaForUser();
+        await FirestoreService.addRentalLog(
+          userId: user!.uid,
+          umbrellaId: umbrellaId,
+          action: 'rent',
+        );
+      } else if (action == 'return') {
+        await FirestoreService.returnUmbrella(umbrellaId);
+        await FirestoreService.returnUmbrellaForUser();
+        await FirestoreService.addRentalLog(
+          userId: user!.uid,
+          umbrellaId: umbrellaId,
+          action: 'return',
+        );
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '[$umbrellaId] 우산 ${action == 'rent' ? '대여' : '반납'} 완료!',
+            ),
+          ),
+        );
+      }
+
+      _fetchRentalStatus(); // 성공하면 상태 갱신
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류 발생: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (user == null) {
@@ -65,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             : '환영합니다, ${user!.displayName ?? '사용자'}',
                         style: const TextStyle(
                           fontSize: 20,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -73,29 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       if (rentalStatus != 'rented')
                         ElevatedButton(
-                          onPressed: () async {
-                            final umbrellaId = await Navigator.push<String>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const QRScanScreen(),
-                              ),
-                            );
-                            if (umbrellaId == null) return;
-
-                            await FirestoreService.rentUmbrella(
-                              umbrellaId,
-                              user!.uid,
-                            );
-                            await FirestoreService.rentUmbrellaForUser();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('[$umbrellaId] 우산 대여 완료!'),
-                              ),
-                            );
-
-                            _fetchRentalStatus();
-                          },
+                          onPressed: () => _handleRentalAction('rent'),
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size.fromHeight(50),
                           ),
@@ -104,26 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       if (rentalStatus == 'rented')
                         ElevatedButton(
-                          onPressed: () async {
-                            final umbrellaId = await Navigator.push<String>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const QRScanScreen(),
-                              ),
-                            );
-                            if (umbrellaId == null) return;
-
-                            await FirestoreService.returnUmbrella(umbrellaId);
-                            await FirestoreService.returnUmbrellaForUser();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('[$umbrellaId] 우산 반납 완료!'),
-                              ),
-                            );
-
-                            _fetchRentalStatus();
-                          },
+                          onPressed: () => _handleRentalAction('return'),
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size.fromHeight(50),
                           ),

@@ -65,4 +65,19 @@ class FirestoreService {
       return null;
     }
   }
+
+  // FirestoreService.dart
+
+  static Future<void> addRentalLog({
+    required String userId,
+    required String umbrellaId,
+    required String action, // 'rent' 또는 'return'
+  }) async {
+    await _db.collection('rental_logs').add({
+      'userId': userId,
+      'umbrellaId': umbrellaId,
+      'action': action,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
 }

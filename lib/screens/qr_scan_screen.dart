@@ -35,7 +35,17 @@ class _QRScanScreenState extends State<QRScanScreen> {
     controller.scannedDataStream.listen((scanData) {
       if (!isScanned) {
         isScanned = true;
-        Navigator.pop(context, scanData.code);
+        if (scanData.code == null || scanData.code!.isEmpty) {
+          // 실패한 경우
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
+          controller.resumeCamera(); // 다시 스캔 가능하게
+          isScanned = false;
+        } else {
+          // 성공한 경우
+          Navigator.pop(context, scanData.code);
+        }
       }
     });
   }
@@ -57,11 +67,8 @@ class _QRScanScreenState extends State<QRScanScreen> {
               ? Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context, "umbrella_01"); // 테스트용 ID
+                    Navigator.pop(context, "umbrella_01");
                   },
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size(200, 50),
-                  ),
                   child: const Text('테스트용 QR 스캔 (umbrella_01)'),
                 ),
               )
