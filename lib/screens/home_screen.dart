@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/firestore_service.dart';
 import '../services/google_sign_in_service.dart';
-import 'scan_screen.dart';
+import 'qr_scan_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -28,6 +28,7 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // 로그인 상태 표시
             Text(
               user?.isAnonymous == true
                   ? '익명 사용자로 로그인 중'
@@ -36,15 +37,16 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // 우산 대여 버튼 → QR 스캔 후 Firestore에 기록
+            // 우산 대여 버튼
             ElevatedButton(
               onPressed: () async {
                 if (user == null) return;
-                // ScanScreen으로 이동해 스캔된 umbrellaId를 받음
+
                 final umbrellaId = await Navigator.push<String>(
                   context,
-                  MaterialPageRoute(builder: (_) => const ScanScreen()),
+                  MaterialPageRoute(builder: (_) => const QRScanScreen()),
                 );
+
                 if (umbrellaId == null) return;
 
                 try {
@@ -63,14 +65,16 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // 우산 반납 버튼 → QR 스캔 후 Firestore에 기록
+            // 우산 반납 버튼
             ElevatedButton(
               onPressed: () async {
                 if (user == null) return;
+
                 final umbrellaId = await Navigator.push<String>(
                   context,
-                  MaterialPageRoute(builder: (_) => const ScanScreen()),
+                  MaterialPageRoute(builder: (_) => const QRScanScreen()),
                 );
+
                 if (umbrellaId == null) return;
 
                 try {
