@@ -20,8 +20,8 @@ class FirestoreService {
   static Future<void> returnUmbrella(String umbrellaId) async {
     await _db.collection('umbrellas').doc(umbrellaId).set({
       'isRented': false,
-      'renterId': null,
-      'rentedAt': null,
+      'renterId': FieldValue.delete(), // 삭제 처리
+      'rentedAt': FieldValue.delete(), // 삭제 처리
     }, SetOptions(merge: true));
   }
 

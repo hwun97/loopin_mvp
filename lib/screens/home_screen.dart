@@ -46,13 +46,28 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                await FirestoreService.returnUmbrellaForUser();
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('우산 반납 완료')));
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null) {
+                  await FirestoreService.returnUmbrella(
+                    user.uid,
+                  ); // user.uid를 umbrellaId로 사용
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text("우산 반납 완료")));
+                }
               },
               child: const Text('우산 반납하기'),
             ),
+
+            // ElevatedButton(
+            //   onPressed: () async {
+            //     await FirestoreService.returnUmbrellaForUser();
+            //     ScaffoldMessenger.of(
+            //       context,
+            //     ).showSnackBar(const SnackBar(content: Text('우산 반납 완료')));
+            //   },
+            //   child: const Text('우산 반납하기'),
+            // ),
           ],
         ),
       ),
