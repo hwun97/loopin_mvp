@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/firestore_service.dart';
 import '../services/google_sign_in_service.dart';
+import 'scan_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -34,42 +35,57 @@ class HomeScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 32),
+
+            // 우산 대여 버튼 → QR 스캔 후 Firestore에 기록
             ElevatedButton(
               onPressed: () async {
                 if (user == null) return;
+                // ScanScreen으로 이동해 스캔된 umbrellaId를 받음
+                final umbrellaId = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ScanScreen()),
+                );
+                if (umbrellaId == null) return;
+
                 try {
-                  // 우산 대여
-                  await FirestoreService.rentUmbrella('umbrella_01', user.uid);
+                  await FirestoreService.rentUmbrella(umbrellaId, user.uid);
                   await FirestoreService.rentUmbrellaForUser();
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('우산 대여 완료!')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('[$umbrellaId] 우산 대여 완료!')),
+                  );
                 } catch (e) {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text('대여 중 오류 발생: $e')));
                 }
               },
-              child: const Text('우산 대여하기'),
+              child: const Text('우산 대여하기 (QR 스캔)'),
             ),
             const SizedBox(height: 16),
+
+            // 우산 반납 버튼 → QR 스캔 후 Firestore에 기록
             ElevatedButton(
               onPressed: () async {
                 if (user == null) return;
+                final umbrellaId = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ScanScreen()),
+                );
+                if (umbrellaId == null) return;
+
                 try {
-                  // 우산 반납
-                  await FirestoreService.returnUmbrella('umbrella_01');
+                  await FirestoreService.returnUmbrella(umbrellaId);
                   await FirestoreService.returnUmbrellaForUser();
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('우산 반납 완료!')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('[$umbrellaId] 우산 반납 완료!')),
+                  );
                 } catch (e) {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text('반납 중 오류 발생: $e')));
                 }
               },
-              child: const Text('우산 반납하기'),
+              child: const Text('우산 반납하기 (QR 스캔)'),
             ),
           ],
         ),
