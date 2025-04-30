@@ -33,12 +33,13 @@ class FirestoreService {
   // User 대여 상태 관리
   // ======================
 
-  static Future<void> rentUmbrellaForUser() async {
+  static Future<void> rentUmbrellaForUser(String umbrellaId) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
     await _db.collection('rentals').doc(user.uid).set({
       'userId': user.uid,
+      'umbrellaId': umbrellaId, // ✅ 이 필드가 없어서 오류 발생했던 거야!
       'status': 'rented',
       'timestamp': FieldValue.serverTimestamp(),
     });
@@ -66,8 +67,6 @@ class FirestoreService {
     }
   }
 
-  // FirestoreService.dart
-
   static Future<void> addRentalLog({
     required String userId,
     required String umbrellaId,
@@ -79,5 +78,21 @@ class FirestoreService {
       'action': action,
       'timestamp': FieldValue.serverTimestamp(),
     });
+  }
+
+  static Future<DocumentSnapshot<Map<String, dynamic>>?> getRentalDoc(
+    String userId,
+  ) async {
+    try {
+      final doc = await _db.collection('rentals').doc(userId).get();
+      if (doc.exists) {
+        return doc;
+      } else {
+        return null;
+      }
+    } catch (e) {
+      print('getRentalDoc 에러: $e');
+      return null;
+    }
   }
 }
