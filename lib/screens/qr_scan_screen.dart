@@ -15,6 +15,12 @@ class _QRScanScreenState extends State<QRScanScreen> {
   QRViewController? controller;
   bool isScanned = false;
 
+  // 시뮬레이터 환경인지 확인
+  bool get isSimulatorDevice {
+    if (kIsWeb) return false;
+    return !(Platform.isAndroid || Platform.isIOS) || kDebugMode;
+  }
+
   @override
   void reassemble() {
     super.reassemble();
@@ -30,32 +36,27 @@ class _QRScanScreenState extends State<QRScanScreen> {
     super.dispose();
   }
 
+  // QR 카메라 뷰가 생성될 때 호출되는 콜백
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) {
-      if (!isScanned) {
-        isScanned = true;
-        if (scanData.code == null || scanData.code!.isEmpty) {
-          // 실패한 경우
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
-          controller.resumeCamera(); // 다시 스캔 가능하게
-          isScanned = false;
-        } else {
-          // 성공한 경우
-          Navigator.pop(context, scanData.code);
-        }
-      }
-    });
-  }
+      if (isScanned) return;
 
-  bool get _isSimulator {
-    if (kIsWeb) return false;
-    if (Platform.isIOS || Platform.isAndroid) {
-      return kDebugMode;
-    }
-    return false;
+      final code = scanData.code;
+
+      if (code == null || code.isEmpty) {
+        // QR 인식 실패
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
+        controller.resumeCamera();
+        return;
+      }
+
+      // QR 인식 성공
+      isScanned = true;
+      Navigator.pop(context, code);
+    });
   }
 
   @override
@@ -63,10 +64,11 @@ class _QRScanScreenState extends State<QRScanScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('QR 코드 스캔')),
       body:
-          _isSimulator
+          isSimulatorDevice
               ? Center(
                 child: ElevatedButton(
                   onPressed: () {
+                    // 시뮬레이터에서는 테스트용 ID 리턴
                     Navigator.pop(context, "umbrella_01");
                   },
                   child: const Text('테스트용 QR 스캔 (umbrella_01)'),

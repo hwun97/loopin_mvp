@@ -6,8 +6,23 @@ import 'screens/home_screen.dart';
 import 'screens/qr_scan_screen.dart';
 
 void main() async {
+  // Flutter 엔진과 위젯 바인딩을 초기화
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // 예외 발생 시 앱이 크래시 나는 걸 막기 위한 설정
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
+
+  // Firebase 초기화
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    print('Firebase 초기화 실패: $e');
+  }
+
   runApp(const LoopInApp());
 }
 
@@ -22,6 +37,13 @@ class LoopInApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
+        // 버튼 스타일 기본값 설정 (선택)
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+            textStyle: const TextStyle(fontSize: 16),
+          ),
+        ),
       ),
       initialRoute: '/',
       routes: {

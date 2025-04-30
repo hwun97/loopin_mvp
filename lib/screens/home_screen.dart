@@ -12,7 +12,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final User? user = FirebaseAuth.instance.currentUser;
   String? rentalStatus;
   String? rentedUmbrellaId;
   bool isLoading = true;
@@ -23,25 +22,35 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchRentalStatus();
   }
 
+  // 🔄 사용자 대여 상태 확인
   Future<void> _fetchRentalStatus() async {
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final status = await FirestoreService.getRentalStatus();
-    String? umbrellaId;
+    try {
+      final status = await FirestoreService.getRentalStatus();
+      String? umbrellaId;
 
-    if (status == 'rented') {
-      final rentalDoc = await FirestoreService.getRentalDoc(user!.uid);
-      umbrellaId = rentalDoc?.data()?['umbrellaId'];
+      if (status == 'rented') {
+        final rentalDoc = await FirestoreService.getRentalDoc(user.uid);
+        umbrellaId = rentalDoc?.data()?['umbrellaId'];
+      }
+
+      setState(() {
+        rentalStatus = status;
+        rentedUmbrellaId = umbrellaId;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('대여 상태 불러오기 실패: $e');
     }
-
-    setState(() {
-      rentalStatus = status;
-      rentedUmbrellaId = umbrellaId;
-      isLoading = false;
-    });
   }
 
+  // 🛠 대여 또는 반납 처리 로직
   Future<void> _handleRentalAction(String action) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
     final umbrellaId = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const QRScanScreen()),
@@ -51,18 +60,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       if (action == 'rent') {
-        await FirestoreService.rentUmbrella(umbrellaId, user!.uid);
-        await FirestoreService.rentUmbrellaForUser(umbrellaId); // 🔧 수정된 부분
+        await FirestoreService.rentUmbrella(umbrellaId, user.uid);
+        await FirestoreService.rentUmbrellaForUser(umbrellaId);
         await FirestoreService.addRentalLog(
-          userId: user!.uid,
+          userId: user.uid,
           umbrellaId: umbrellaId,
           action: 'rent',
         );
-      } else if (action == 'return') {
+      } else {
         await FirestoreService.returnUmbrella(umbrellaId);
         await FirestoreService.returnUmbrellaForUser();
         await FirestoreService.addRentalLog(
-          userId: user!.uid,
+          userId: user.uid,
           umbrellaId: umbrellaId,
           action: 'return',
         );
@@ -76,9 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
+        _fetchRentalStatus();
       }
-
-      _fetchRentalStatus();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -90,6 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     if (user == null) {
       return const Scaffold(body: Center(child: Text('로그인 오류')));
     }
@@ -116,10 +126,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // 👋 인사말
                       Text(
-                        user!.isAnonymous
+                        user.isAnonymous
                             ? '익명 사용자로 로그인 중'
-                            : '환영합니다, ${user!.displayName ?? '사용자'}',
+                            : '환영합니다, ${user.displayName ?? '사용자'}',
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -127,12 +138,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
+
+                      // 📍 대여 상태 표시
                       Text(
                         rentalStatus == 'rented'
                             ? '✅ 현재 우산 대여 중'
                             : '🅾️ 대여 중인 우산 없음',
                         style: const TextStyle(fontSize: 18),
                       ),
+
+                      // 🔖 대여된 우산 ID 표시
                       if (rentalStatus == 'rented' &&
                           rentedUmbrellaId != null) ...[
                         const SizedBox(height: 8),
@@ -144,7 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
+
                       const SizedBox(height: 32),
+
+                      // 📦 대여 or 반납 버튼
                       ElevatedButton(
                         onPressed:
                             () => _handleRentalAction(
