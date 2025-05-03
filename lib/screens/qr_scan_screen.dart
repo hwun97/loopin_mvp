@@ -69,7 +69,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     // 시뮬레이터에서는 테스트용 ID 리턴
-                    Navigator.pop(context, "umbrella_01");
+                    Navigator.pop(context, "station_01");
                   },
                   child: const Text('테스트용 QR 스캔 (umbrella_01)'),
                 ),

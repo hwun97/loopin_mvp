@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:loopin_mvp/screens/qr_scan_screen.dart';
-import '../services/firestore_service.dart';
 import '../services/google_sign_in_service.dart';
+import '../services/firestore/rental_service.dart';
+import '../services/firestore/station_service.dart';
+import '../services/firestore/log_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -12,8 +14,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final User? user = FirebaseAuth.instance.currentUser;
   String? rentalStatus;
-  String? rentedUmbrellaId;
+  String? stationId;
   bool isLoading = true;
 
   @override
@@ -22,57 +25,49 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchRentalStatus();
   }
 
-  // 🔄 사용자 대여 상태 확인
+  // 현재 사용자의 대여 상태 확인
   Future<void> _fetchRentalStatus() async {
-    final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    try {
-      final status = await FirestoreService.getRentalStatus();
-      String? umbrellaId;
+    final status = await RentalService.getRentalStatus();
+    String? fetchedStationId;
 
-      if (status == 'rented') {
-        final rentalDoc = await FirestoreService.getRentalDoc(user.uid);
-        umbrellaId = rentalDoc?.data()?['umbrellaId'];
-      }
-
-      setState(() {
-        rentalStatus = status;
-        rentedUmbrellaId = umbrellaId;
-        isLoading = false;
-      });
-    } catch (e) {
-      print('대여 상태 불러오기 실패: $e');
+    if (status == 'rented') {
+      final rentalDoc = await RentalService.getRentalDoc();
+      fetchedStationId = rentalDoc?.data()?['stationId'];
     }
+
+    setState(() {
+      rentalStatus = status;
+      stationId = fetchedStationId;
+      isLoading = false;
+    });
   }
 
-  // 🛠 대여 또는 반납 처리 로직
+  // 대여 또는 반납 처리
   Future<void> _handleRentalAction(String action) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final umbrellaId = await Navigator.push<String>(
+    final scannedStationId = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (_) => const QRScanScreen()),
     );
 
-    if (umbrellaId == null) return;
+    if (scannedStationId == null) return;
 
     try {
       if (action == 'rent') {
-        await FirestoreService.rentUmbrella(umbrellaId, user.uid);
-        await FirestoreService.rentUmbrellaForUser(umbrellaId);
-        await FirestoreService.addRentalLog(
-          userId: user.uid,
-          umbrellaId: umbrellaId,
+        await StationService.rentFromStation(scannedStationId);
+        await RentalService.rentForUser(scannedStationId);
+        await LogService.addRentalLog(
+          userId: user!.uid,
+          stationId: scannedStationId,
           action: 'rent',
         );
-      } else {
-        await FirestoreService.returnUmbrella(umbrellaId);
-        await FirestoreService.returnUmbrellaForUser();
-        await FirestoreService.addRentalLog(
-          userId: user.uid,
-          umbrellaId: umbrellaId,
+      } else if (action == 'return') {
+        await StationService.returnToStation(scannedStationId);
+        await RentalService.returnForUser();
+        await LogService.addRentalLog(
+          userId: user!.uid,
+          stationId: scannedStationId,
           action: 'return',
         );
       }
@@ -81,11 +76,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '[$umbrellaId] 우산 ${action == 'rent' ? '대여' : '반납'} 완료!',
+              '[$scannedStationId] 우산 ${action == 'rent' ? '대여' : '반납'} 완료!',
             ),
           ),
         );
-        _fetchRentalStatus();
+        _fetchRentalStatus(); // 상태 갱신
       }
     } catch (e) {
       if (mounted) {
@@ -98,8 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
     if (user == null) {
       return const Scaffold(body: Center(child: Text('로그인 오류')));
     }
@@ -126,11 +119,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // 👋 인사말
                       Text(
-                        user.isAnonymous
+                        user!.isAnonymous
                             ? '익명 사용자로 로그인 중'
-                            : '환영합니다, ${user.displayName ?? '사용자'}',
+                            : '환영합니다, ${user!.displayName ?? '사용자'}',
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -138,31 +130,23 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 24),
-
-                      // 📍 대여 상태 표시
                       Text(
                         rentalStatus == 'rented'
                             ? '✅ 현재 우산 대여 중'
                             : '🅾️ 대여 중인 우산 없음',
                         style: const TextStyle(fontSize: 18),
                       ),
-
-                      // 🔖 대여된 우산 ID 표시
-                      if (rentalStatus == 'rented' &&
-                          rentedUmbrellaId != null) ...[
+                      if (rentalStatus == 'rented' && stationId != null) ...[
                         const SizedBox(height: 8),
                         Text(
-                          '대여한 우산 ID: $rentedUmbrellaId',
+                          '대여소 ID: $stationId',
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.grey,
                           ),
                         ),
                       ],
-
                       const SizedBox(height: 32),
-
-                      // 📦 대여 or 반납 버튼
                       ElevatedButton(
                         onPressed:
                             () => _handleRentalAction(

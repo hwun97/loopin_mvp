@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/qr_scan_screen.dart';
+import 'services/firestore/firestore_init.dart';
 
 void main() async {
   // Flutter 엔진과 위젯 바인딩을 초기화
@@ -19,6 +20,9 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // ✅ [주의] 아래 코드는 최초 실행시에만 사용! 이후 반드시 주석 처리하거나 삭제
+    await FirestoreInit.initializeStations();
   } catch (e) {
     print('Firebase 초기화 실패: $e');
   }
@@ -37,7 +41,6 @@ class LoopInApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
-        // 버튼 스타일 기본값 설정 (선택)
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
