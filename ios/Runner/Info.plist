@@ -32,6 +32,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.927381146865-1pi3psgn3dig15s2ahli8krvqsr1050a</string>
+				<string>kakao5cb90e12073dc07d66926e91f7a629ad</string>
 			</array>
 		</dict>
 	</array>
@@ -47,6 +48,8 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>UIStatusBarStyle</key>
+	<string></string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

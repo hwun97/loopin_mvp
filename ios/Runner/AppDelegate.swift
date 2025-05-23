@@ -1,5 +1,7 @@
 import Flutter
 import UIKit
+import KakaoSDKCommon
+import KakaoSDKAuth
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -7,7 +9,16 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    KakaoSDK.initSDK(appKey: "5cb90e12073dc07d66926e91f7a629ad")
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func application(_ app: UIApplication, open url: URL,
+                            options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
+    if (AuthApi.isKakaoTalkLoginUrl(url)) {
+      return AuthController.handleOpenUrl(url: url)
+    }
+    return super.application(app, open: url, options: options)
   }
 }
