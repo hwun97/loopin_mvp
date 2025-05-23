@@ -1,5 +1,3 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
@@ -14,11 +12,6 @@ class _QRScanScreenState extends State<QRScanScreen> {
   bool isScanned = false;
   final MobileScannerController cameraController = MobileScannerController();
 
-  bool get isSimulatorDevice {
-    if (kIsWeb) return false;
-    return !(Platform.isAndroid || Platform.isIOS) || kDebugMode;
-  }
-
   @override
   void dispose() {
     cameraController.dispose();
@@ -27,6 +20,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
 
   void onDetect(BarcodeCapture capture) {
     if (isScanned) return;
+
     final barcode = capture.barcodes.first;
     final code = barcode.rawValue;
 
@@ -48,36 +42,26 @@ class _QRScanScreenState extends State<QRScanScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF21c3c5),
         title: const Text('QR 코드 스캔'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on),
+            onPressed: () => cameraController.toggleTorch(),
+          ),
+        ],
       ),
-      body:
-          isSimulatorDevice
-              ? Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, "station_01");
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF21c3c5),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  child: const Text('테스트용 QR 스캔 (station_01)'),
-                ),
-              )
-              : Stack(
-                children: [
-                  MobileScanner(
-                    controller: cameraController,
-                    onDetect: onDetect,
-                  ),
-                  ScannerOverlay(),
-                ],
-              ),
+      body: Stack(
+        children: [
+          MobileScanner(controller: cameraController, onDetect: onDetect),
+          const ScannerOverlay(),
+        ],
+      ),
     );
   }
 }
 
 class ScannerOverlay extends StatelessWidget {
+  const ScannerOverlay({super.key});
+
   @override
   Widget build(BuildContext context) {
     return CustomPaint(painter: ScannerOverlayPainter(), size: Size.infinite);

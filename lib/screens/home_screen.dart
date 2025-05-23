@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:loopin_mvp/screens/qr_scan_screen.dart';
 import '../services/google_sign_in_service.dart';
 import '../services/firestore/rental_service.dart';
@@ -18,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? rentalStatus;
   String? stationId;
   bool isLoading = true;
+  int passCount = 0;
 
   @override
   void initState() {
@@ -30,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final status = await RentalService.getRentalStatus();
     String? fetchedStationId;
+    final count = await RentalService.getRemainingPassCount(user!.uid);
 
     if (status == 'rented') {
       final rentalDoc = await RentalService.getRentalDoc();
@@ -40,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       rentalStatus = status;
       stationId = fetchedStationId;
       isLoading = false;
+      passCount = count;
     });
   }
 
@@ -53,6 +57,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       if (action == 'rent') {
+        final hasPass = await RentalService.hasValidPass(user!.uid);
+        if (!hasPass) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('이용권이 없습니다. 구매 후 이용해주세요.')),
+          );
+          return;
+        }
+
         await StationService.rentFromStation(scannedStationId);
         await RentalService.rentForUser(scannedStationId);
         await LogService.addRentalLog(
@@ -86,6 +98,20 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('오류 발생: $e')));
       }
+    }
+  }
+
+  Future<void> _handleIssueTestPass() async {
+    try {
+      await RentalService.issueTestPass();
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('테스트용 이용권이 발급되었습니다.')));
+      _fetchRentalStatus();
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('이용권 발급 실패: $e')));
     }
   }
 
@@ -146,6 +172,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ],
+                      const SizedBox(height: 8),
+                      Text(
+                        '남은 이용권: $passCount개',
+                        style: const TextStyle(fontSize: 16),
+                      ),
                       const SizedBox(height: 32),
                       ElevatedButton(
                         onPressed:
@@ -162,6 +193,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? '우산 반납하기 (QR 스캔)'
                               : '우산 대여하기 (QR 스캔)',
                         ),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton(
+                        onPressed: _handleIssueTestPass,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF21c3c5),
+                        ),
+                        child: const Text('테스트용 이용권 받기'),
                       ),
                     ],
                   ),
