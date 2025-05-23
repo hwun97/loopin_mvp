@@ -56,4 +56,23 @@ class StationService {
       transaction.update(docRef, {'currentCount': currentCount + 1});
     });
   }
+
+  /// 대여소 생성 함수 (테스트용)
+  static Future<void> createStation({
+    required String stationId,
+    required int capacity,
+    required int currentCount,
+  }) async {
+    await _db.collection('stations').doc(stationId).set({
+      'capacity': capacity,
+      'currentCount': currentCount,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// 대여소 목록 가져오기 (테스트용)
+  static Future<List<String>> getAllStationIds() async {
+    final snapshot = await _db.collection('stations').get();
+    return snapshot.docs.map((doc) => doc.id).toList();
+  }
 }

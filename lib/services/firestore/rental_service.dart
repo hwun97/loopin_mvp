@@ -10,7 +10,6 @@ class RentalService {
     final user = _auth.currentUser;
     if (user == null) throw Exception("로그인된 사용자가 없습니다.");
 
-    // 이용권 확인 및 차감
     final passRef = _db.collection('passes').doc(user.uid);
     final passDoc = await passRef.get();
 
