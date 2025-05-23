@@ -1,8 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:loopin_mvp/screens/qr_scan_screen.dart';
-import '../services/google_sign_in_service.dart';
 import '../services/firestore/rental_service.dart';
 import '../services/firestore/station_service.dart';
 import '../services/firestore/log_service.dart';
@@ -125,15 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF21c3c5),
         title: const Text('LoopIn 홈'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await GoogleSignInService.signOut();
-              Navigator.pushReplacementNamed(context, '/');
-            },
-          ),
-        ],
       ),
       body:
           isLoading
