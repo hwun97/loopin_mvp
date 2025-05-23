@@ -5,18 +5,16 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
 
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
-import 'screens/email_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/qr_scan_screen.dart';
+import 'screens/email_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ Kakao SDK 초기화
   KakaoSdk.init(nativeAppKey: '5cb90e12073dc07d66926e91f7a629ad');
 
-  // Firebase 초기화
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -24,10 +22,6 @@ void main() async {
   } catch (e) {
     print('Firebase 초기화 실패: $e');
   }
-
-  FlutterError.onError = (FlutterErrorDetails details) {
-    FlutterError.presentError(details);
-  };
 
   runApp(const LoopInApp());
 }
@@ -41,13 +35,22 @@ class LoopInApp extends StatelessWidget {
       title: 'LoopIn',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primaryColor: const Color(0xFF21C3C5),
         scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF21C3C5),
+          foregroundColor: Colors.white,
+        ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF21C3C5),
+            foregroundColor: Colors.white,
             minimumSize: const Size.fromHeight(48),
             textStyle: const TextStyle(fontSize: 16),
           ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF21C3C5)),
         ),
       ),
       home: const SplashScreen(),

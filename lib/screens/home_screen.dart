@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _fetchRentalStatus();
   }
 
-  // 현재 사용자의 대여 상태 확인
   Future<void> _fetchRentalStatus() async {
     if (user == null) return;
 
@@ -44,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // 대여 또는 반납 처리
   Future<void> _handleRentalAction(String action) async {
     final scannedStationId = await Navigator.push<String>(
       context,
@@ -80,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-        _fetchRentalStatus(); // 상태 갱신
+        _fetchRentalStatus();
       }
     } catch (e) {
       if (mounted) {
@@ -99,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color(0xFF21c3c5),
         title: const Text('LoopIn 홈'),
         actions: [
           IconButton(
@@ -126,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
+                          color: Color(0xFF21c3c5),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -153,6 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               rentalStatus == 'rented' ? 'return' : 'rent',
                             ),
                         style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF21c3c5),
+                          foregroundColor: Colors.white,
                           minimumSize: const Size.fromHeight(50),
                         ),
                         child: Text(

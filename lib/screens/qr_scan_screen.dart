@@ -14,7 +14,6 @@ class _QRScanScreenState extends State<QRScanScreen> {
   bool isScanned = false;
   final MobileScannerController cameraController = MobileScannerController();
 
-  // 시뮬레이터 환경인지 확인
   bool get isSimulatorDevice {
     if (kIsWeb) return false;
     return !(Platform.isAndroid || Platform.isIOS) || kDebugMode;
@@ -45,7 +44,11 @@ class _QRScanScreenState extends State<QRScanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('QR 코드 스캔')),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF21c3c5),
+        title: const Text('QR 코드 스캔'),
+      ),
       body:
           isSimulatorDevice
               ? Center(
@@ -53,19 +56,27 @@ class _QRScanScreenState extends State<QRScanScreen> {
                   onPressed: () {
                     Navigator.pop(context, "station_01");
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF21c3c5),
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(50),
+                  ),
                   child: const Text('테스트용 QR 스캔 (station_01)'),
                 ),
               )
-              : MobileScanner(
-                controller: cameraController,
-                onDetect: onDetect,
-                // overlay: ScannerOverlay(), // 사용자에게 인식 범위를 시각적으로 안내
+              : Stack(
+                children: [
+                  MobileScanner(
+                    controller: cameraController,
+                    onDetect: onDetect,
+                  ),
+                  ScannerOverlay(),
+                ],
               ),
     );
   }
 }
 
-/// 선택사항: 기존 QrScannerOverlayShape 비슷한 느낌의 오버레이 위젯
 class ScannerOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -102,7 +113,7 @@ class ScannerOverlayPainter extends CustomPainter {
 
     final borderPaint =
         Paint()
-          ..color = Colors.blue
+          ..color = const Color(0xFF21c3c5)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 4;
 

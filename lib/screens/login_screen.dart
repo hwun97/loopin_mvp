@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/google_sign_in_service.dart';
 import '../services/kakao_sign_in_service.dart';
-// import '../services/auth_service.dart';
-import '../widgets/social_login_button.dart'; // 위 위젯 임포트
+import '../widgets/social_login_button.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -42,18 +41,20 @@ class LoginScreen extends StatelessWidget {
                   }
                 },
               ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () async {
-                  // final user = await AuthService.signInAnonymously();
-                  // if (user != null) {
-                  //   Navigator.pushReplacementNamed(context, '/home');
-                  // }
-                  Navigator.pushNamed(context, '/email');
-                },
-                child: const Text(
-                  "이메일로 로그인하기",
-                  style: TextStyle(color: Colors.white),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pushNamed(context, '/email'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF21c3c5),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    "이메일로 로그인하기",
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
