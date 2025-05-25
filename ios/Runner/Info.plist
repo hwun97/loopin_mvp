@@ -31,7 +31,7 @@
 			<string>com.example.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.927381146865-1pi3psgn3dig15s2ahli8krvqsr1050a</string>
+				<string>com.googleusercontent.apps.927381146865-u4bbk8phplrfjrdjtmqb5unu6sncl2bp</string>
 				<string>kakao5cb90e12073dc07d66926e91f7a629ad</string>
 			</array>
 		</dict>
@@ -63,5 +63,10 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

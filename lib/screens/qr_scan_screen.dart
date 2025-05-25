@@ -18,21 +18,31 @@ class _QRScanScreenState extends State<QRScanScreen> {
     super.dispose();
   }
 
-  void onDetect(BarcodeCapture capture) {
-    if (isScanned) return;
+  void onDetect(BarcodeCapture capture) async {
+    try {
+      if (isScanned) return;
+      final barcode = capture.barcodes.first;
+      final code = barcode.rawValue;
 
-    final barcode = capture.barcodes.first;
-    final code = barcode.rawValue;
+      debugPrint('[QRScanScreen] 감지된 코드: $code');
 
-    if (code == null || code.isEmpty) {
+      if (code == null || code.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
+        return;
+      }
+
+      isScanned = true;
+      debugPrint('[QRScanScreen] Navigator.pop 시작');
+      Navigator.pop(context, code);
+      debugPrint('[QRScanScreen] Navigator.pop 완료');
+    } catch (e) {
+      debugPrint('[QRScanScreen] QR 처리 중 예외 발생: $e');
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
-      return;
+      ).showSnackBar(SnackBar(content: Text('QR 처리 중 오류 발생: $e')));
     }
-
-    isScanned = true;
-    Navigator.pop(context, code);
   }
 
   @override
@@ -46,6 +56,16 @@ class _QRScanScreenState extends State<QRScanScreen> {
           IconButton(
             icon: const Icon(Icons.flash_on),
             onPressed: () => cameraController.toggleTorch(),
+          ),
+          IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              debugPrint('[QRScanScreen] 테스트용 강제 입력: station_01');
+              if (!isScanned) {
+                isScanned = true;
+                Navigator.pop(context, 'station_01');
+              }
+            },
           ),
         ],
       ),
@@ -71,7 +91,7 @@ class ScannerOverlay extends StatelessWidget {
 class ScannerOverlayPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint =
+    final paint =
         Paint()
           ..color = Colors.black.withOpacity(0.5)
           ..style = PaintingStyle.fill;
@@ -84,10 +104,10 @@ class ScannerOverlayPainter extends CustomPainter {
       height: cutOutSize,
     );
 
-    final Path background =
+    final background =
         Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
-    final Path cutOut = Path()..addRect(cutOutRect);
-    final Path overlayPath = Path.combine(
+    final cutOut = Path()..addRect(cutOutRect);
+    final overlayPath = Path.combine(
       PathOperation.difference,
       background,
       cutOut,

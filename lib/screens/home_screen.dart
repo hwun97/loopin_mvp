@@ -4,6 +4,7 @@ import 'package:loopin_mvp/screens/qr_scan_screen.dart';
 import '../services/firestore/rental_service.dart';
 import '../services/firestore/station_service.dart';
 import '../services/firestore/log_service.dart';
+import '../widgets/loading_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,33 +52,53 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (_) => const QRScanScreen()),
     );
 
-    if (scannedStationId == null) return;
+    debugPrint('[handleRentalAction] scannedStationId: $scannedStationId');
+    if (scannedStationId == null) {
+      debugPrint('[handleRentalAction] scannedStationId is null, return');
+      return;
+    }
+
+    await showLoadingDialog(
+      context,
+      message: action == 'rent' ? '대여 처리 중...' : '반납 처리 중...',
+    );
 
     try {
       if (action == 'rent') {
+        debugPrint('step 1');
         final hasPass = await RentalService.hasValidPass(user!.uid);
+        debugPrint('step 2');
         if (!hasPass) {
+          debugPrint('step 2.1: no pass');
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('이용권이 없습니다. 구매 후 이용해주세요.')),
           );
           return;
         }
 
+        debugPrint('step 3');
         await StationService.rentFromStation(scannedStationId);
+        debugPrint('step 4');
         await RentalService.rentForUser(scannedStationId);
+        debugPrint('step 5');
         await LogService.addRentalLog(
           userId: user!.uid,
           stationId: scannedStationId,
           action: 'rent',
         );
+        debugPrint('step 6');
       } else if (action == 'return') {
+        debugPrint('step 7');
         await StationService.returnToStation(scannedStationId);
+        debugPrint('step 8');
         await RentalService.returnForUser();
+        debugPrint('step 9');
         await LogService.addRentalLog(
           userId: user!.uid,
           stationId: scannedStationId,
           action: 'return',
         );
+        debugPrint('step 10');
       }
 
       if (mounted) {
@@ -91,10 +112,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _fetchRentalStatus();
       }
     } catch (e) {
+      debugPrint('예외 발생: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('오류 발생: $e')));
+      }
+    } finally {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context); // 로딩 다이얼로그 닫기
       }
     }
   }
@@ -120,10 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF21c3c5),
-        title: const Text('LoopIn 홈'),
-      ),
+      appBar: AppBar(title: const Text('드리움 홈')),
       body:
           isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -172,11 +195,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             () => _handleRentalAction(
                               rentalStatus == 'rented' ? 'return' : 'rent',
                             ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF21c3c5),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size.fromHeight(50),
-                        ),
                         child: Text(
                           rentalStatus == 'rented'
                               ? '우산 반납하기 (QR 스캔)'
@@ -186,9 +204,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 12),
                       OutlinedButton(
                         onPressed: _handleIssueTestPass,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF21c3c5),
-                        ),
                         child: const Text('테스트용 이용권 받기'),
                       ),
                     ],

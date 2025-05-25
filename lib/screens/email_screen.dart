@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../theme/theme.dart';
 
 class EmailLoginScreen extends StatefulWidget {
   const EmailLoginScreen({super.key});
@@ -42,9 +43,9 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF21c3c5),
+        backgroundColor: loopinPrimaryColor,
         title: const Text('이메일 로그인'),
       ),
       body: Padding(
@@ -62,7 +63,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                   borderSide: BorderSide(color: Colors.white70),
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF21c3c5)),
+                  borderSide: BorderSide(color: loopinPrimaryColor),
                 ),
               ),
               keyboardType: TextInputType.emailAddress,
@@ -70,6 +71,7 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: _passwordController,
+              obscureText: true,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(
                 labelText: '비밀번호',
@@ -78,23 +80,30 @@ class _EmailLoginScreenState extends State<EmailLoginScreen> {
                   borderSide: BorderSide(color: Colors.white70),
                 ),
                 focusedBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF21c3c5)),
+                  borderSide: BorderSide(color: loopinPrimaryColor),
                 ),
               ),
-              obscureText: true,
             ),
             const SizedBox(height: 32),
-            _isLoading
-                ? const CircularProgressIndicator(color: Color(0xFF21c3c5))
-                : ElevatedButton(
-                  onPressed: _signIn,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF21c3c5),
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(50),
-                  ),
-                  child: const Text('로그인'),
-                ),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _signIn,
+                style: loopinButtonStyle,
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Text('로그인'),
+              ),
+            ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () {

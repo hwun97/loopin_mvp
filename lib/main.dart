@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:http/http.dart' as http;
 
 import 'firebase_options.dart';
 import 'screens/login_screen.dart';
@@ -9,21 +9,40 @@ import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/qr_scan_screen.dart';
 import 'screens/email_screen.dart';
+import 'screens/splash_screen.dart';
+import 'theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   KakaoSdk.init(nativeAppKey: '5cb90e12073dc07d66926e91f7a629ad');
 
+  await _initializeFirebase();
+
+  // ✅ 네트워크 테스트
+  await testNetwork();
+
+  runApp(const LoopInApp());
+}
+
+Future<void> _initializeFirebase() async {
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    print("✅ Firebase 초기화 완료");
   } catch (e) {
-    print('Firebase 초기화 실패: $e');
+    print('❌ Firebase 초기화 실패: $e');
   }
+}
 
-  runApp(const LoopInApp());
+Future<void> testNetwork() async {
+  try {
+    final response = await http.get(Uri.parse('https://www.google.com'));
+    print('✅ Network OK: ${response.statusCode}');
+  } catch (e) {
+    print('❌ Network Error: $e');
+  }
 }
 
 class LoopInApp extends StatelessWidget {
@@ -32,27 +51,9 @@ class LoopInApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'LoopIn',
+      title: '드리움',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primaryColor: const Color(0xFF21C3C5),
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF21C3C5),
-          foregroundColor: Colors.white,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF21C3C5),
-            foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(48),
-            textStyle: const TextStyle(fontSize: 16),
-          ),
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: const Color(0xFF21C3C5)),
-        ),
-      ),
+      theme: loopinTheme,
       home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
@@ -62,37 +63,5 @@ class LoopInApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
       },
     );
-  }
-}
-
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  void _checkLoginStatus() async {
-    await Future.delayed(const Duration(seconds: 2));
-    final user = FirebaseAuth.instance.currentUser;
-    if (mounted) {
-      if (user != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        Navigator.pushReplacementNamed(context, '/login');
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
