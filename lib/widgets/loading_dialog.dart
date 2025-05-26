@@ -1,32 +1,16 @@
 import 'package:flutter/material.dart';
+import 'loading_indicator.dart';
 
+/// 비동기 작업 중 로딩 다이얼로그를 띄우는 함수
 Future<void> showLoadingDialog(BuildContext context, {String? message}) async {
-  return showDialog(
+  debugPrint('[showLoadingDialog] 다이얼로그 띄우기 시작');
+  await showDialog(
     context: context,
     barrierDismissible: false,
-    builder:
-        (_) => WillPopScope(
-          onWillPop: () async => false,
-          child: Dialog(
-            backgroundColor: Colors.black87,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(color: Color(0xFF21c3c5)),
-                  const SizedBox(height: 16),
-                  Text(
-                    message ?? "처리 중...",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+    builder: (context) {
+      debugPrint('[showLoadingDialog] 다이얼로그 builder 실행됨');
+      return LoadingIndicator(message: message);
+    },
   );
+  debugPrint('[showLoadingDialog] 다이얼로그 종료됨');
 }

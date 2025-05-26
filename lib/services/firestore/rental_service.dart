@@ -14,11 +14,14 @@ class RentalService {
     final passDoc = await passRef.get();
 
     if (!passDoc.exists) {
+      print("[rentForUser] 이용권 없음");
       throw Exception("이용권이 존재하지 않습니다.");
     }
 
     final data = passDoc.data();
     final int remaining = data?['remaining'] ?? 0;
+    print("[rentForUser] 남은 이용권: $remaining");
+
     if (remaining <= 0) {
       throw Exception("남은 이용권이 없습니다.");
     }
@@ -47,29 +50,24 @@ class RentalService {
     });
   }
 
-  /// 현재 사용자의 대여 상태 (rented / returned / null) 반환
+  /// 현재 사용자의 대여 상태 반환 (rented, returned, null)
   static Future<String?> getRentalStatus() async {
     final user = _auth.currentUser;
     if (user == null) return null;
 
     final doc = await _db.collection('rentals').doc(user.uid).get();
-    if (doc.exists) {
-      return doc['status'];
-    } else {
-      return null;
-    }
+    return doc.exists ? doc['status'] : null;
   }
 
   /// 현재 사용자의 rental 문서 전체 반환
   static Future<DocumentSnapshot<Map<String, dynamic>>?> getRentalDoc() async {
     final user = _auth.currentUser;
     if (user == null) return null;
-
     try {
       final doc = await _db.collection('rentals').doc(user.uid).get();
       return doc.exists ? doc : null;
     } catch (e) {
-      print('getRentalDoc 에러: \$e');
+      print('[getRentalDoc] 에러: $e');
       return null;
     }
   }
@@ -80,11 +78,11 @@ class RentalService {
       final doc = await _db.collection('passes').doc(userId).get();
       if (!doc.exists) return false;
       final data = doc.data();
-      if (data == null) return false;
-      final int remaining = data['remaining'] ?? 0;
+      final int remaining = data?['remaining'] ?? 0;
+      print("[hasValidPass] remaining: $remaining");
       return remaining > 0;
     } catch (e) {
-      print('hasValidPass 에러: \$e');
+      print('[hasValidPass] 에러: $e');
       return false;
     }
   }
@@ -93,11 +91,9 @@ class RentalService {
   static Future<int> getRemainingPassCount(String userId) async {
     try {
       final doc = await _db.collection('passes').doc(userId).get();
-      if (!doc.exists) return 0;
-      final data = doc.data();
-      return data?['remaining'] ?? 0;
+      return doc.exists ? (doc.data()?['remaining'] ?? 0) : 0;
     } catch (e) {
-      print('getRemainingPassCount 에러: \$e');
+      print('[getRemainingPassCount] 에러: $e');
       return 0;
     }
   }

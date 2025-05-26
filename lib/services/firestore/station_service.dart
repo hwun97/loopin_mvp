@@ -3,31 +3,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class StationService {
   static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  /// 대여소 문서 가져오기
-  static Future<DocumentSnapshot<Map<String, dynamic>>?> getStationDoc(
-    String stationId,
-  ) async {
-    try {
-      final doc = await _db.collection('stations').doc(stationId).get();
-      return doc.exists ? doc : null;
-    } catch (e) {
-      print('getStationDoc 에러: $e');
-      return null;
-    }
-  }
-
   /// 대여소에서 우산 대여: 수량 1 감소
   static Future<void> rentFromStation(String stationId) async {
     final docRef = _db.collection('stations').doc(stationId);
+
     await _db.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
+
+      print('[rentFromStation] stationId: $stationId');
+      print('[rentFromStation] station exists: ${snapshot.exists}');
+      print('[rentFromStation] station data: ${snapshot.data()}');
 
       if (!snapshot.exists) {
         throw Exception("존재하지 않는 대여소입니다: $stationId");
       }
 
       final currentCount = snapshot.data()?['currentCount'] ?? 0;
-
       if (currentCount <= 0) {
         throw Exception("대여 가능한 우산이 없습니다.");
       }
@@ -39,8 +30,13 @@ class StationService {
   /// 대여소에 우산 반납: 수량 1 증가
   static Future<void> returnToStation(String stationId) async {
     final docRef = _db.collection('stations').doc(stationId);
+
     await _db.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
+
+      print('[returnToStation] stationId: $stationId');
+      print('[returnToStation] station exists: ${snapshot.exists}');
+      print('[returnToStation] station data: ${snapshot.data()}');
 
       if (!snapshot.exists) {
         throw Exception("존재하지 않는 대여소입니다: $stationId");
@@ -55,24 +51,5 @@ class StationService {
 
       transaction.update(docRef, {'currentCount': currentCount + 1});
     });
-  }
-
-  /// 대여소 생성 함수 (테스트용)
-  static Future<void> createStation({
-    required String stationId,
-    required int capacity,
-    required int currentCount,
-  }) async {
-    await _db.collection('stations').doc(stationId).set({
-      'capacity': capacity,
-      'currentCount': currentCount,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-  }
-
-  /// 대여소 목록 가져오기 (테스트용)
-  static Future<List<String>> getAllStationIds() async {
-    final snapshot = await _db.collection('stations').get();
-    return snapshot.docs.map((doc) => doc.id).toList();
   }
 }

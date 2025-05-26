@@ -27,21 +27,28 @@ class _QRScanScreenState extends State<QRScanScreen> {
       debugPrint('[QRScanScreen] 감지된 코드: $code');
 
       if (code == null || code.isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('QR 코드 인식 실패')));
+        }
         return;
       }
 
       isScanned = true;
       debugPrint('[QRScanScreen] Navigator.pop 시작');
-      Navigator.pop(context, code);
+      if (mounted) {
+        Navigator.pop(context, code);
+      }
       debugPrint('[QRScanScreen] Navigator.pop 완료');
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('[QRScanScreen] QR 처리 중 예외 발생: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('QR 처리 중 오류 발생: $e')));
+      debugPrint('[QRScanScreen] 스택트레이스: $stack');
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('QR 처리 중 오류 발생: $e')));
+      }
     }
   }
 
@@ -61,7 +68,7 @@ class _QRScanScreenState extends State<QRScanScreen> {
             icon: const Icon(Icons.bug_report),
             onPressed: () {
               debugPrint('[QRScanScreen] 테스트용 강제 입력: station_01');
-              if (!isScanned) {
+              if (!isScanned && mounted) {
                 isScanned = true;
                 Navigator.pop(context, 'station_01');
               }

@@ -52,77 +52,89 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(builder: (_) => const QRScanScreen()),
     );
 
-    debugPrint('[handleRentalAction] scannedStationId: $scannedStationId');
+    debugPrint('[handleRentalAction] 스캔 결과: $scannedStationId');
+
     if (scannedStationId == null) {
-      debugPrint('[handleRentalAction] scannedStationId is null, return');
+      debugPrint('[handleRentalAction] 스캔 실패, 리턴');
       return;
     }
 
-    await showLoadingDialog(
+    // ✅ 작은 딜레이를 주자. Navigator.pop 직후에 showDialog 실행되면 UI thread 블로킹 발생 가능
+    await Future.delayed(const Duration(milliseconds: 100));
+
+    debugPrint('[handleRentalAction] showLoadingDialog 호출 전');
+
+    final dialogFuture = showLoadingDialog(
       context,
       message: action == 'rent' ? '대여 처리 중...' : '반납 처리 중...',
     );
 
-    try {
-      if (action == 'rent') {
-        debugPrint('step 1');
-        final hasPass = await RentalService.hasValidPass(user!.uid);
-        debugPrint('step 2');
-        if (!hasPass) {
-          debugPrint('step 2.1: no pass');
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('이용권이 없습니다. 구매 후 이용해주세요.')),
+    debugPrint('[handleRentalAction] showLoadingDialog 호출 완료');
+
+    // ✅ 이후 로직은 Future.microtask 로 밀어넣어 async queue 확보
+    Future.microtask(() async {
+      try {
+        if (action == 'rent') {
+          debugPrint('step 1');
+          final hasPass = await RentalService.hasValidPass(user!.uid);
+          debugPrint('step 2');
+          if (!hasPass) {
+            debugPrint('step 2.1: no pass');
+            if (mounted) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('이용권이 없습니다.')));
+            }
+            return;
+          }
+
+          debugPrint('step 3');
+          await StationService.rentFromStation(scannedStationId);
+          debugPrint('step 4');
+          await RentalService.rentForUser(scannedStationId);
+          debugPrint('step 5');
+          await LogService.addRentalLog(
+            userId: user!.uid,
+            stationId: scannedStationId,
+            action: 'rent',
           );
-          return;
+          debugPrint('step 6');
+        } else if (action == 'return') {
+          debugPrint('step 7');
+          await StationService.returnToStation(scannedStationId);
+          debugPrint('step 8');
+          await RentalService.returnForUser();
+          debugPrint('step 9');
+          await LogService.addRentalLog(
+            userId: user!.uid,
+            stationId: scannedStationId,
+            action: 'return',
+          );
+          debugPrint('step 10');
         }
 
-        debugPrint('step 3');
-        await StationService.rentFromStation(scannedStationId);
-        debugPrint('step 4');
-        await RentalService.rentForUser(scannedStationId);
-        debugPrint('step 5');
-        await LogService.addRentalLog(
-          userId: user!.uid,
-          stationId: scannedStationId,
-          action: 'rent',
-        );
-        debugPrint('step 6');
-      } else if (action == 'return') {
-        debugPrint('step 7');
-        await StationService.returnToStation(scannedStationId);
-        debugPrint('step 8');
-        await RentalService.returnForUser();
-        debugPrint('step 9');
-        await LogService.addRentalLog(
-          userId: user!.uid,
-          stationId: scannedStationId,
-          action: 'return',
-        );
-        debugPrint('step 10');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('[$scannedStationId] 우산 $action 완료!')),
+          );
+          _fetchRentalStatus();
+        }
+      } catch (e) {
+        debugPrint('[handleRentalAction] 예외 발생: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('오류 발생: $e')));
+        }
+      } finally {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context); // 로딩 다이얼로그 닫기
+          debugPrint('[handleRentalAction] 로딩 다이얼로그 닫음');
+        }
       }
+    });
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '[$scannedStationId] 우산 ${action == 'rent' ? '대여' : '반납'} 완료!',
-            ),
-          ),
-        );
-        _fetchRentalStatus();
-      }
-    } catch (e) {
-      debugPrint('예외 발생: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류 발생: $e')));
-      }
-    } finally {
-      if (Navigator.canPop(context)) {
-        Navigator.pop(context); // 로딩 다이얼로그 닫기
-      }
-    }
+    await dialogFuture;
   }
 
   Future<void> _handleIssueTestPass() async {
