@@ -52,4 +52,10 @@ class StationService {
       transaction.update(docRef, {'currentCount': currentCount + 1});
     });
   }
+
+  /// 모든 대여소 목록 가져오기 (지도 마커용)
+  static Future<List<Map<String, dynamic>>> getAllStations() async {
+    final snapshot = await _db.collection('stations').get();
+    return snapshot.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+  }
 }

@@ -1,4 +1,4 @@
-package com.example.loopin_mvp
+package com.loopon.dreaum
 
 import io.flutter.embedding.android.FlutterActivity
 

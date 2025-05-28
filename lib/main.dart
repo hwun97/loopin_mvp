@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:http/http.dart' as http;
 
 import 'firebase_options.dart';
@@ -10,14 +11,21 @@ import 'screens/home_screen.dart';
 import 'screens/qr_scan_screen.dart';
 import 'screens/email_screen.dart';
 import 'screens/splash_screen.dart';
+import 'screens/station_map_screen.dart';
 import 'theme/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ✅ Kakao SDK 초기화
   KakaoSdk.init(nativeAppKey: '5cb90e12073dc07d66926e91f7a629ad');
 
+  // ✅ Firebase 초기화
   await _initializeFirebase();
+
+  // ✅ Naver Map 초기화 (인스턴스 방식)
+  final naverMap = FlutterNaverMap();
+  await naverMap.init(clientId: 'r83wucnh0o');
 
   // ✅ 네트워크 테스트
   await testNetwork();
@@ -61,6 +69,7 @@ class LoopInApp extends StatelessWidget {
         '/scan': (context) => const QRScanScreen(),
         '/email': (context) => const EmailLoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/map': (context) => const StationMapScreen(),
       },
     );
   }

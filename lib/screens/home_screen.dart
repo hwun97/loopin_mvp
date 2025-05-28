@@ -59,27 +59,18 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    // ✅ 작은 딜레이를 주자. Navigator.pop 직후에 showDialog 실행되면 UI thread 블로킹 발생 가능
     await Future.delayed(const Duration(milliseconds: 100));
-
-    debugPrint('[handleRentalAction] showLoadingDialog 호출 전');
 
     final dialogFuture = showLoadingDialog(
       context,
       message: action == 'rent' ? '대여 처리 중...' : '반납 처리 중...',
     );
 
-    debugPrint('[handleRentalAction] showLoadingDialog 호출 완료');
-
-    // ✅ 이후 로직은 Future.microtask 로 밀어넣어 async queue 확보
     Future.microtask(() async {
       try {
         if (action == 'rent') {
-          debugPrint('step 1');
           final hasPass = await RentalService.hasValidPass(user!.uid);
-          debugPrint('step 2');
           if (!hasPass) {
-            debugPrint('step 2.1: no pass');
             if (mounted) {
               ScaffoldMessenger.of(
                 context,
@@ -88,29 +79,21 @@ class _HomeScreenState extends State<HomeScreen> {
             return;
           }
 
-          debugPrint('step 3');
           await StationService.rentFromStation(scannedStationId);
-          debugPrint('step 4');
           await RentalService.rentForUser(scannedStationId);
-          debugPrint('step 5');
           await LogService.addRentalLog(
             userId: user!.uid,
             stationId: scannedStationId,
             action: 'rent',
           );
-          debugPrint('step 6');
         } else if (action == 'return') {
-          debugPrint('step 7');
           await StationService.returnToStation(scannedStationId);
-          debugPrint('step 8');
           await RentalService.returnForUser();
-          debugPrint('step 9');
           await LogService.addRentalLog(
             userId: user!.uid,
             stationId: scannedStationId,
             action: 'return',
           );
-          debugPrint('step 10');
         }
 
         if (mounted) {
@@ -120,7 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _fetchRentalStatus();
         }
       } catch (e) {
-        debugPrint('[handleRentalAction] 예외 발생: $e');
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -128,8 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } finally {
         if (Navigator.canPop(context)) {
-          Navigator.pop(context); // 로딩 다이얼로그 닫기
-          debugPrint('[handleRentalAction] 로딩 다이얼로그 닫음');
+          Navigator.pop(context);
         }
       }
     });
@@ -217,6 +198,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       OutlinedButton(
                         onPressed: _handleIssueTestPass,
                         child: const Text('테스트용 이용권 받기'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.pushNamed(context, '/map'),
+                        icon: const Icon(Icons.map),
+                        label: const Text('주변 대여소 보기'),
                       ),
                     ],
                   ),

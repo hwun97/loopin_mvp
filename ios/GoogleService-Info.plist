@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>927381146865-u4bbk8phplrfjrdjtmqb5unu6sncl2bp.apps.googleusercontent.com</string>
+	<string>927381146865-1h9dgkl02migkq1i5lfed6926528rmcm.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.927381146865-u4bbk8phplrfjrdjtmqb5unu6sncl2bp</string>
+	<string>com.googleusercontent.apps.927381146865-1h9dgkl02migkq1i5lfed6926528rmcm</string>
 	<key>ANDROID_CLIENT_ID</key>
 	<string>927381146865-2f0020rjac35jenuqdfnmuvbn38bug1b.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
@@ -15,22 +15,22 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.hwun.loopinMvp</string>
+	<string>com.loopon.dreaum</string>
 	<key>PROJECT_ID</key>
 	<string>loopin-mvp</string>
 	<key>STORAGE_BUCKET</key>
 	<string>loopin-mvp.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:927381146865:ios:41d05534c00e0f587bad50</string>
+	<string>1:927381146865:ios:ee2cbc7c0a2b648a7bad50</string>
 </dict>
 </plist>
